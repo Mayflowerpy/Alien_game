@@ -26,9 +26,10 @@ class Ship():
 	def update(self):
 		"""Обновляет позицию корабля с учетом флага"""
 		# Обновляется атрибут x, не rect
-		if self.moving_right:
+		# Ограничение хода корабля рамками right and left, чтоыб не выходил за экран
+		if self.moving_right and self.rect.right < self.screen_rect.right: 
 			self.x += self.settings.ship_speed
-		if self.moving_left:
+		if self.moving_left and self.rect.left > self.screen_rect.left:
 			self.x -= self.settings.ship_speed
 
 		# обновление атрибута rect на основании self.x
