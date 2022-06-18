@@ -90,10 +90,7 @@ class AlienInvasion:
         # Сброс игровой статистики
         self.stats.reset_stats()
         self.stats.game_active = True
-        self.sb.prep_score()
-        self.sb.prep_level()
-        self.sb.prep_ships()
-        self.sb.read_record()
+        self.sb.prep_images()
 
         # Очистка списков пришельцев и снарядов
         self.aliens.empty()
@@ -161,15 +158,20 @@ class AlienInvasion:
             self.sb.prep_score()
             self.sb.check_high_score()
 
+        self.stat_new_level()
+
+    def stat_new_level(self):
+        """Переходит на новый уровень при уничтожении всех пришельцев"""
         if not self.aliens:
-            # Уничтожение существующих снарядов и создание флота
+        # Уничтожение существующих снарядов и создание флота
             self.bullets.empty()
             self._create_fleet()
             self.settings.increase_speed()
 
-            # Увеличение уровня
+        # Увеличение уровня
             self.stats.level += 1
             self.sb.prep_level()
+
 
     def _create_fleet(self):
         """Создание флота пришельцев"""
