@@ -22,19 +22,20 @@ class AlienInvasion:
         pygame.init()     #Инициализирует настройки игры
         self.settings = Settings()
         
-        # Полноэкранный режим:
+       # Полноэкранный режим:
+        """ 
         self.screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_height = self.screen.get_rect().height
-
+       """
         # По указанным размерам:
-        #self.screen = pygame.display.set_mode(
-        #    (self.settings.screen_width, self.settings.screen_height))
+        self.screen = pygame.display.set_mode(
+            (self.settings.screen_width, self.settings.screen_height))
         
         pygame.display.set_caption("Alien Invasion") # Название окна
 
         # Создание экземпляров для хранения статистики
-        # и панели результатов'
+        # и панели результатов
         self.stats = GameStats(self)
         self.sb = Scoreboard(self)
 
@@ -89,6 +90,10 @@ class AlienInvasion:
         # Сброс игровой статистики
         self.stats.reset_stats()
         self.stats.game_active = True
+        self.sb.prep_score()
+        self.sb.prep_level()
+        self.sb.prep_ships()
+        self.sb.read_record()
 
         # Очистка списков пришельцев и снарядов
         self.aliens.empty()
@@ -112,6 +117,7 @@ class AlienInvasion:
         elif event.key == pygame.K_q:
             print(f"Aliens crash: {self.stats.aliens_crash}")
             print(f"Ship crash: {self.stats.ship_crash}")
+            self.sb.write_record()
             sys.exit()
         elif event.key == pygame.K_p and not self.stats.game_active:
             self.start_game()
@@ -149,11 +155,21 @@ class AlienInvasion:
         collisions = pygame.sprite.groupcollide(
             self.bullets, self.aliens, True, True)
         
+        if collisions:
+            for aliens in collisions.values():
+                self.stats.score += self.settings.alien_points * len(aliens)
+            self.sb.prep_score()
+            self.sb.check_high_score()
+
         if not self.aliens:
             # Уничтожение существующих снарядов и создание флота
             self.bullets.empty()
             self._create_fleet()
             self.settings.increase_speed()
+
+            # Увеличение уровня
+            self.stats.level += 1
+            self.sb.prep_level()
 
     def _create_fleet(self):
         """Создание флота пришельцев"""
@@ -223,7 +239,7 @@ class AlienInvasion:
         screen_rect = self.screen.get_rect()
         for alien in self.aliens.sprites():
             if alien.rect.bottom >= screen_rect.bottom:
-                self._ship_hit
+                self._ship_hit()
                 break
 
     def _change_fleet_direction(self):
@@ -236,7 +252,9 @@ class AlienInvasion:
         """Обрабатывает столкновение корабля с пришельцем"""
         # Уменьшение ships_life
         if self.stats.ships_life > 0:
+            # Уменьшение ships_left > 0:
             self.stats.ships_life -= 1
+            self.sb.prep_ships()
 
             # Очистка списков пришельцев и снарядов
             self.aliens.empty()
@@ -246,7 +264,7 @@ class AlienInvasion:
             self._create_fleet()
             self.ship.center_ship()
 
-            # Пауза
+            # Пауза 
             sleep(0.5)
         else:
             self.stats.game_active = False
